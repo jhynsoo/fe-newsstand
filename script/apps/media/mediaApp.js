@@ -1,63 +1,36 @@
+import ArrowButton from '../../components/media/ArrowButton.js';
 import MediaNav from '../../components/media/MediaNav.js';
-import gridApp from './newsGridApp.js';
-import listApp from './newsListApp.js';
-import { ArrowButton } from '../../components/Button.js';
-import Icon from '../../components/Icon.js';
+import MediaView from '../../components/media/MediaView.js';
+import NavStore from '../../store/NavStore.js';
 
-const MediaViewWrapper = () => {
-  const mediaViewWrapper = document.createElement('div');
-  const mediaView = document.createElement('div');
+const mediaApp = themeStore => {
+  const navStore = new NavStore();
+  const render = () => {
+    const navArea = document.querySelector('#media_view_nav');
+    const mediaView = document.querySelector('#media_view');
 
-  mediaViewWrapper.id = 'media_view_wrapper';
-  mediaView.id = 'media_view';
-  mediaViewWrapper.appendChild(ArrowButton('left'));
-  mediaViewWrapper.appendChild(mediaView);
-  mediaViewWrapper.appendChild(ArrowButton('right'));
-  return mediaViewWrapper;
-};
+    document.querySelectorAll('.list_progress').forEach(bar => bar.remove());
+    navArea.replaceWith(MediaNav(navStore));
+    mediaView.replaceWith(MediaView(themeStore, navStore));
+    mediaView.querySelectorAll('.snack_bar').forEach(snackbar => {
+      snackbar.remove();
+    });
+  };
+  const createLayout = () => {
+    const wrapper = document.querySelector('#media_view_wrapper');
+    const mediaView = document.createElement('div');
 
-const initMedia = mediaWrapper => {
-  mediaWrapper.appendChild(
-    MediaNav(mediaWrapper.mediaSelectData, mediaWrapper.viewSelectData)
-  );
-  mediaWrapper.appendChild(MediaViewWrapper());
-};
+    mediaView.id = 'media_view';
+    wrapper.append(ArrowButton('left'), mediaView, ArrowButton('right'));
+  };
 
-const mediaApp = () => {
-  const mediaWrapper = document.querySelector('#media_wrapper');
-
-  mediaWrapper.mediaSelectData = [
-    {
-      id: 'media_select_all',
-      innerHTML: '전체 언론사',
-      onChange: () => {
-        console.log('전체');
-      },
-      defaultChecked: true,
-    },
-    {
-      id: 'media_select_subscribed',
-      innerHTML: '내가 구독한 언론사',
-      onChange: () => {
-        console.log('구독');
-      },
-    },
-  ];
-  mediaWrapper.viewSelectData = [
-    {
-      id: 'view_list',
-      innerHTML: Icon.listView,
-      onChange: listApp,
-    },
-    {
-      id: 'view_grid',
-      innerHTML: Icon.gridView,
-      onChange: gridApp,
-      defaultChecked: true,
-    },
-  ];
-  initMedia(mediaWrapper);
-  gridApp();
+  navStore.subscribe(() => {
+    document.eventManager.unregister(['view', 'button']);
+    themeStore.unsubscribe('view');
+  });
+  navStore.subscribe(render);
+  createLayout();
+  render();
 };
 
 export default mediaApp;
